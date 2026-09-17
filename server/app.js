@@ -21,6 +21,9 @@ const PORT = process.env.PORT || 3000;
 // 정적 파일 호스팅 (public 디렉터리)
 app.use(express.static(path.join(__dirname, '../public')));
 
+// 카트라이더 3D 호스팅 (/kartrider 경로)
+app.use('/kartrider', express.static(path.join(__dirname, '../kartrider-3d')));
+
 // 기본 라우트
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', playersCount: game.players.size });
