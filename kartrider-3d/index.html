@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>KartRider 3D Web - 카트라이더 웹 레이싱</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E<text y=%2226%22 font-size=%2224%22>🏎️</text></svg>">
+</head>
+<body>
+
+  <!-- 3D Canvas Viewport -->
+  <div id="canvas-container"></div>
+
+  <!-- Dynamic Screen Overlays -->
+  <div id="speed-lines"></div>
+  <div id="shield-overlay"></div>
+  <div id="water-overlay"></div>
+
+  <!-- HUD Interface -->
+  <div id="hud">
+    <!-- Top HUD Bar -->
+    <div class="hud-top">
+      <div class="rank-badge">
+        <span class="rank-number" id="rank-val">1</span>
+        <span class="rank-total">/ 5</span>
+      </div>
+
+      <div class="lap-time-container">
+        <div class="lap-pill" id="lap-val">LAP 1/2</div>
+        <div class="time-pill" id="time-val">00:00.00</div>
+      </div>
+
+      <div class="items-container">
+        <div class="item-slot primary" id="item-slot-1">
+          <span class="item-icon"></span>
+          <span class="item-badge" style="display:none;"></span>
+        </div>
+        <div class="item-slot" id="item-slot-2">
+          <span class="item-icon"></span>
+          <span class="item-badge" style="display:none;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Alerts & Countdown -->
+    <div class="hud-center">
+      <div id="countdown-text">3</div>
+      <div id="alert-message">순간 부스터!</div>
+    </div>
+
+    <!-- Bottom HUD Bar -->
+    <div class="hud-bottom">
+      <!-- Mini-map Radar -->
+      <div class="minimap-wrapper">
+        <canvas id="minimap-canvas" width="170" height="170"></canvas>
+      </div>
+
+      <!-- Quick Control Tips -->
+      <div class="hud-tips">
+        <span><b>↑ / W</b> 가속</span>
+        <span><b>Shift</b> 드리프트</span>
+        <span><b>Ctrl / Space</b> 아이템</span>
+        <span><b>R</b> 리셋</span>
+        <span><b>C</b> 시점</span>
+        <span><b>M</b> 사운드</span>
+      </div>
+
+      <!-- Speedometer & Drift Gauge -->
+      <div class="dashboard-container">
+        <div class="drift-gauge-box">
+          <div class="drift-gauge-label">
+            <span>DRIFT BOOSTER GAUGE</span>
+            <span>N₂O</span>
+          </div>
+          <div class="drift-gauge-track">
+            <div class="drift-gauge-fill" id="drift-gauge-fill"></div>
+          </div>
+        </div>
+
+        <div class="speedometer">
+          <span class="speed-val" id="speed-val">0</span>
+          <span class="speed-unit">km/h</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile / Touch Controls Overlay -->
+  <div id="touch-controls">
+    <div class="touch-left-group">
+      <button class="touch-btn" id="btn-touch-left" aria-label="좌회전">◀</button>
+      <button class="touch-btn" id="btn-touch-right" aria-label="우회전">▶</button>
+    </div>
+    <div class="touch-center-group">
+      <button class="touch-btn touch-btn-util" id="btn-touch-reset" title="위치 리셋">↺</button>
+    </div>
+    <div class="touch-right-group">
+      <div class="touch-actions-row">
+        <button class="touch-btn touch-btn-action touch-btn-item" id="btn-touch-item">아이템</button>
+        <button class="touch-btn touch-btn-action touch-btn-drift" id="btn-touch-drift">드리프트</button>
+      </div>
+      <div class="touch-pedals-row">
+        <button class="touch-btn touch-btn-pedal touch-btn-brake" id="btn-touch-down">브레이크</button>
+        <button class="touch-btn touch-btn-pedal touch-btn-gas" id="btn-touch-up">가속 GO!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start / Game Instructions Modal -->
+  <div class="modal-overlay" id="instructions-modal">
+    <div class="modal-content">
+      <h1 class="modal-title">🏎️ KARTRIDER 3D</h1>
+      <p style="color: #94a3b8; font-size: 17px; margin-bottom: 15px;">
+        붐힐 마을 서킷에서 펼쳐지는 스릴 넘치는 3D 카트 레이싱!
+      </p>
+
+      <div class="control-grid">
+        <div class="control-item">
+          <span class="key-badge">↑ / W</span>
+          <span>가속 (출발 부스터 타이밍!)</span>
+        </div>
+        <div class="control-item">
+          <span class="key-badge">↓ / S</span>
+          <span>브레이크 및 후진</span>
+        </div>
+        <div class="control-item">
+          <span class="key-badge">← / →</span>
+          <span>좌우 핸들 조향</span>
+        </div>
+        <div class="control-item">
+          <span class="key-badge">Shift</span>
+          <span>드리프트 (부스터 게이지 충전)</span>
+        </div>
+        <div class="control-item">
+          <span class="key-badge">Ctrl / Space</span>
+          <span>아이템 사용 (미사일, 부스터 등)</span>
+        </div>
+        <div class="control-item">
+          <span class="key-badge">R</span>
+          <span>트랙 중앙으로 위치 리셋</span>
+        </div>
+      </div>
+
+      <p style="color: #38bdf8; font-size: 14px; margin-bottom: 22px;">
+        💡 <b>Tip</b>: 드리프트 종료 후 가속 키를 즉시 누르면 <b>순간 부스터</b> 발동!
+      </p>
+
+      <button class="btn-primary" id="btn-start">레이스 시작 (START)</button>
+    </div>
+  </div>
+
+  <!-- Finish Podium Results Modal -->
+  <div class="modal-overlay hidden" id="podium-modal">
+    <div class="modal-content">
+      <h1 class="modal-title">🏁 RACE FINISH!</h1>
+      <p style="color: #94a3b8; font-size: 16px;">축하합니다! 레이스 순위 결과입니다.</p>
+
+      <div class="podium-list" id="podium-list">
+        <!-- Rows dynamically injected by game.js -->
+      </div>
+
+      <button class="btn-primary" id="btn-restart">다시 달리기 (RETRY)</button>
+    </div>
+  </div>
+
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Game Modules -->
+  <script src="js/audio.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/track.js"></script>
+  <script src="js/kart.js"></script>
+  <script src="js/items.js"></script>
+  <script src="js/game.js"></script>
+
+</body>
+</html>

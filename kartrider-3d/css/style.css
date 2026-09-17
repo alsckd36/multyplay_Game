@@ -1,0 +1,637 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Noto+Sans+KR:wght@700;900&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #0b101b;
+  font-family: 'Fredoka', 'Noto Sans KR', sans-serif;
+}
+
+#canvas-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+/* Speed lines effect during booster */
+#speed-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  background: radial-gradient(circle, transparent 40%, rgba(255, 230, 100, 0.25) 75%, rgba(255, 100, 20, 0.4) 100%);
+  transition: opacity 0.2s ease;
+}
+
+#speed-lines.active {
+  opacity: 1;
+}
+
+/* UI Overlay Container */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 30px;
+}
+
+/* Top bar: Rank, Lap, Time, Item Slots */
+.hud-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Rank Badge */
+.rank-badge {
+  display: flex;
+  align-items: baseline;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  padding: 8px 24px;
+  border-radius: 40px;
+  box-shadow: 0 8px 25px rgba(255, 75, 43, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  border: 3px solid #fff;
+  transform: skewX(-10deg);
+}
+
+.rank-number {
+  font-size: 48px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 2px 3px 0 #b31217;
+}
+
+.rank-total {
+  font-size: 24px;
+  color: #ffe066;
+  margin-left: 6px;
+  font-weight: 700;
+  text-shadow: 1px 2px 0 #b31217;
+}
+
+/* Lap & Time Info */
+.lap-time-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.lap-pill {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #38bdf8;
+  padding: 6px 20px;
+  border-radius: 20px;
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+  letter-spacing: 1px;
+}
+
+.time-pill {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #e2e8f0;
+  padding: 4px 16px;
+  border-radius: 16px;
+  color: #38bdf8;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+}
+
+/* Item Slots in Top Center/Right */
+.items-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.item-slot {
+  width: 76px;
+  height: 76px;
+  background: radial-gradient(circle, #2a3452, #161b2b);
+  border: 3px solid #64748b;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.item-slot.primary {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  transform: scale(1.08);
+}
+
+.item-slot.has-item {
+  animation: itemPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.item-icon {
+  font-size: 42px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+}
+
+.item-badge {
+  position: absolute;
+  bottom: -6px;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@keyframes itemPop {
+  0% { transform: scale(0.7); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1.08); }
+}
+
+/* Center Banner: Countdown, Instant Booster Alert, Lap Notifications */
+.hud-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#countdown-text {
+  font-size: 96px;
+  font-weight: 900;
+  color: #ffeb3b;
+  text-shadow: 4px 6px 0 #ff5722, 0 0 35px rgba(255, 235, 59, 0.8);
+  transform: scale(0);
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#countdown-text.show {
+  transform: scale(1);
+}
+
+#alert-message {
+  font-size: 32px;
+  font-weight: 900;
+  color: #38bdf8;
+  background: rgba(15, 23, 42, 0.85);
+  border: 3px solid #38bdf8;
+  padding: 8px 30px;
+  border-radius: 30px;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+  opacity: 0;
+  transform: translateY(20px) skewX(-10deg);
+  transition: all 0.25s ease;
+}
+
+#alert-message.show {
+  opacity: 1;
+  transform: translateY(0) skewX(-10deg);
+}
+
+/* Bottom HUD: Speedometer, Booster Gauge, Mini-map */
+.hud-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+/* Mini-map Container */
+.minimap-wrapper {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.9), rgba(10, 15, 30, 0.95));
+  border: 3px solid rgba(56, 189, 248, 0.6);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Speedometer & Drift Gauge */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-right: 20px;
+}
+
+/* N2O Drift Gauge Bar */
+.drift-gauge-box {
+  width: 280px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 2px solid #64748b;
+  border-radius: 12px;
+  padding: 4px 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.drift-gauge-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.drift-gauge-track {
+  width: 100%;
+  height: 16px;
+  background: #1e293b;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.drift-gauge-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.8);
+  transition: width 0.08s linear;
+}
+
+.drift-gauge-fill.full {
+  animation: pulseGlow 0.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.6); box-shadow: 0 0 20px #ff007f; }
+}
+
+/* Speedometer */
+.speedometer {
+  display: flex;
+  align-items: baseline;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  padding: 10px 32px;
+  border-radius: 35px;
+  border: 3px solid #38bdf8;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(56, 189, 248, 0.3);
+  transform: skewX(-10deg);
+}
+
+.speed-val {
+  font-size: 64px;
+  font-weight: 900;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+}
+
+.speed-unit {
+  font-size: 20px;
+  color: #38bdf8;
+  margin-left: 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* Modals: Help / Instructions / Finish Podium */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(6, 11, 25, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 3px solid #38bdf8;
+  border-radius: 28px;
+  padding: 36px 44px;
+  max-width: 580px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.4);
+  color: #fff;
+  animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-title {
+  font-size: 38px;
+  font-weight: 900;
+  color: #ffe066;
+  text-shadow: 2px 3px 0 #d97706, 0 0 20px rgba(255, 224, 102, 0.6);
+  margin-bottom: 20px;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  text-align: left;
+  margin: 24px 0;
+  background: rgba(30, 41, 59, 0.6);
+  padding: 18px 24px;
+  border-radius: 16px;
+  border: 1px solid #334155;
+}
+
+.control-item {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  gap: 10px;
+}
+
+.key-badge {
+  background: #334155;
+  color: #38bdf8;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 13px;
+  border: 1px solid #64748b;
+  box-shadow: 0 2px 0 #1e293b;
+  min-width: 44px;
+  text-align: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  border: none;
+  border-radius: 40px;
+  padding: 14px 44px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+  transition: all 0.15s ease;
+  transform: skewX(-6deg);
+}
+
+.btn-primary:hover {
+  transform: skewX(-6deg) scale(1.05);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.8);
+}
+
+.btn-primary:active {
+  transform: skewX(-6deg) scale(0.98);
+}
+
+/* Results Podium Table */
+.podium-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.podium-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid #334155;
+  font-weight: 700;
+}
+
+.podium-row.player {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+.podium-rank {
+  font-size: 20px;
+  color: #ffe066;
+  width: 40px;
+  text-align: left;
+}
+
+.podium-name {
+  flex: 1;
+  text-align: left;
+  font-size: 18px;
+}
+
+.podium-time {
+  font-variant-numeric: tabular-nums;
+  color: #94a3b8;
+}
+
+/* Shield Effect Ring on Player Screen */
+#shield-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border: 8px solid rgba(56, 189, 248, 0);
+  box-shadow: inset 0 0 40px rgba(56, 189, 248, 0);
+  transition: all 0.3s ease;
+  z-index: 6;
+}
+
+#shield-overlay.active {
+  border-color: rgba(56, 189, 248, 0.8);
+  box-shadow: inset 0 0 60px rgba(56, 189, 248, 0.5);
+}
+
+/* Water Trap Overlay */
+#water-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.4) 0%, rgba(3, 105, 161, 0.7) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 6;
+}
+
+#water-overlay.active {
+  opacity: 1;
+  animation: waterWobble 1s infinite alternate ease-in-out;
+}
+
+@keyframes waterWobble {
+  0% { transform: scale(1); filter: blur(0px); }
+  100% { transform: scale(1.02); filter: blur(2px); }
+}
+
+/* Quick Floating Key Hints */
+.hud-tips {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Touch / Mobile Virtual Controls */
+#touch-controls {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  width: 100%;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.touch-left-group, .touch-right-group, .touch-center-group {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.touch-right-group {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.touch-actions-row, .touch-pedals-row {
+  display: flex;
+  gap: 10px;
+}
+
+.touch-btn {
+  background: rgba(15, 23, 42, 0.75);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border-radius: 16px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.05s, background 0.1s, border-color 0.1s;
+}
+
+.touch-btn:active {
+  transform: scale(0.92);
+  background: rgba(56, 189, 248, 0.4);
+  border-color: #38bdf8;
+}
+
+.touch-left-group .touch-btn {
+  width: 58px;
+  height: 58px;
+  font-size: 22px;
+}
+
+.touch-btn-util {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 20px;
+  background: rgba(30, 41, 59, 0.6);
+}
+
+.touch-btn-action {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.touch-btn-item {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(185, 28, 28, 0.8));
+  border-color: #f87171;
+}
+
+.touch-btn-drift {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.8));
+  border-color: #fbbf24;
+}
+
+.touch-btn-pedal {
+  padding: 10px 20px;
+  font-size: 15px;
+}
+
+.touch-btn-brake {
+  background: rgba(220, 38, 38, 0.45);
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
+.touch-btn-gas {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(29, 78, 216, 0.9));
+  border-color: #60a5fa;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.5);
+}
