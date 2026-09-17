@@ -1,0 +1,23 @@
+{
+  "name": "multiplayer-arena",
+  "version": "1.0.0",
+  "description": "Real-time 2D Multiplayer Survival Arena Game with Node.js and Socket.io",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "node --watch server/app.js"
+  },
+  "keywords": [
+    "multiplayer",
+    "game",
+    "socketio",
+    "canvas",
+    "html5"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}

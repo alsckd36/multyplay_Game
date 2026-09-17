@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyber Arena 2D - 실시간 멀티플레이어 배틀</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 게임 캔버스 -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- 인게임 HUD 오버레이 -->
+  <div id="gameHud" class="hud-container hidden">
+    <!-- 좌상단: 내 상태 정보 -->
+    <div class="hud-panel player-stats">
+      <div class="player-header">
+        <span id="hudLevelBadge" class="badge">LV. 1</span>
+        <span id="hudNickname" class="player-name">Player</span>
+      </div>
+      <div class="hp-bar-container">
+        <div id="hudHpFill" class="hp-fill" style="width: 100%;"></div>
+        <span id="hudHpText" class="hp-text">100 / 100</span>
+      </div>
+      <div class="stats-row">
+        <span>점수: <b id="hudScore">0</b></span>
+        <span>처치: <b id="hudKills">0</b></span>
+      </div>
+    </div>
+
+    <!-- 우상단: 실시간 리더보드 -->
+    <div class="hud-panel leaderboard-panel">
+      <h3>🏆 TOP 10 랭킹</h3>
+      <ol id="leaderboardList">
+        <!-- 동적 랭킹 목록 -->
+      </ol>
+    </div>
+
+    <!-- 좌하단: 실시간 채팅창 -->
+    <div class="hud-panel chat-panel">
+      <div id="chatMessages" class="chat-messages"></div>
+      <form id="chatForm" class="chat-input-form">
+        <input type="text" id="chatInput" placeholder="Enter 키를 눌러 대화 입력..." maxlength="100" autocomplete="off">
+      </form>
+    </div>
+
+    <!-- 우하단: 미니맵 -->
+    <div class="hud-panel minimap-panel">
+      <canvas id="minimapCanvas" width="150" height="150"></canvas>
+    </div>
+
+    <!-- 조작 가이드 안내바 -->
+    <div class="controls-hint">
+      [W,A,S,D] 이동 | [마우스] 조준 & 좌클릭/스페이스바 사격 | [Enter] 채팅
+    </div>
+  </div>
+
+  <!-- 시작 / 로그인 모달 -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h1 class="glow-title">CYBER ARENA 2D</h1>
+        <p class="subtitle">실시간 멀티플레이어 서바이벌 대전</p>
+      </div>
+
+      <div class="form-group">
+        <label for="nicknameInput">플레이어 닉네임</label>
+        <input type="text" id="nicknameInput" placeholder="닉네임 입력 (최대 12자)" maxlength="12" autofocus>
+      </div>
+
+      <div class="form-group">
+        <label>기체 네온 컬러 선택</label>
+        <div class="color-palette" id="colorPalette">
+          <button type="button" class="color-btn active" data-color="#00f0ff" style="background: #00f0ff;"></button>
+          <button type="button" class="color-btn" data-color="#ff0055" style="background: #ff0055;"></button>
+          <button type="button" class="color-btn" data-color="#ffe600" style="background: #ffe600;"></button>
+          <button type="button" class="color-btn" data-color="#00ff66" style="background: #00ff66;"></button>
+          <button type="button" class="color-btn" data-color="#bd00ff" style="background: #bd00ff;"></button>
+          <button type="button" class="color-btn" data-color="#ff7700" style="background: #ff7700;"></button>
+        </div>
+      </div>
+
+      <div class="guide-box">
+        <h4>🎮 조작 방법</h4>
+        <ul>
+          <li><b>이동:</b> <code>W</code>, <code>A</code>, <code>S</code>, <code>D</code> 또는 방향키</li>
+          <li><b>공격:</b> 마우스 조준 후 <code>좌클릭</code> 또는 <code>스페이스바</code></li>
+          <li><b>보석 수집:</b> 맵 곳곳의 빛나는 젬을 모아 레벨업과 HP 회복!</li>
+          <li><b>전략:</b> 적을 처치하면 대량의 보석과 점수를 획득합니다.</li>
+        </ul>
+      </div>
+
+      <button id="joinBtn" class="primary-btn">전장 입장 (PLAY)</button>
+    </div>
+  </div>
+
+  <!-- 사망 / 부활 모달 -->
+  <div id="respawnModal" class="modal-overlay hidden">
+    <div class="modal-card death-card">
+      <h2 class="death-title">기체 파괴됨</h2>
+      <p id="deathReason" class="death-desc">적의 공격을 받아 격추되었습니다.</p>
+      <div class="final-stats">
+        <div>최종 점수: <b id="finalScore">0</b></div>
+        <div>처치 수: <b id="finalKills">0</b></div>
+      </div>
+      <button id="respawnBtn" class="primary-btn pulse">다시 출격 (RESPAWN)</button>
+    </div>
+  </div>
+
+  <!-- Socket.io 클라이언트 라이브러리 -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- 클라이언트 모듈 -->
+  <script src="js/ui.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/client.js"></script>
+</body>
+</html>
